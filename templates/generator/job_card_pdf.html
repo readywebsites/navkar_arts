@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Job Card</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 12px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+        }
+        .job-card-item {
+            border: 1px solid #999;
+            padding: 10px;
+            margin-bottom: 10px; /* Space between items */
+            page-break-inside: avoid;
+            display: flex; /* Use flexbox for row layout */
+            align-items: center; /* Vertically align items in the center */
+            width: 100%;
+        }
+        .job-card-item .details {
+            flex: 1; /* Details take up available space */
+            padding-right: 10px;
+        }
+        .job-card-item .details p {
+            margin: 0 0 5px 0;
+        }
+        .job-card-item .image-placeholder {
+            flex-shrink: 0; /* Prevent image from shrinking */
+            width: 150px; /* Fixed width for the image container */
+            height: 100px; /* Fixed height for the image container */
+            border: 1px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .job-card-item img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Navkar Arts - Job Card</h1>
+        <p><strong>Client:</strong> {{ project.client.name }} | <strong>Site:</strong> {{ project.site_address }}</p>
+    </div>
+
+    <div>
+        {% for item in items %}
+        <div class="job-card-item">
+            <div class="details">
+                <p><strong>Company:</strong> {{ item.company_name }}</p>
+                <p><strong>Booklet No:</strong> {{ item.booklet_no }}</p>
+                <p><strong>Page No:</strong> {{ item.page_no }}</p>
+            </div>
+            <div class="image-placeholder">
+                {% if item.reference_image %}
+                    <img src="{{ item.reference_image.url }}">
+                {% else %}
+                    <span>No Reference Image Uploaded</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</body>
+</html>
