@@ -69,23 +69,32 @@
             </div>
         </div>
 
-        <!-- Quotation Items -->
+        <!-- Items -->
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Quotation Items</h5>
-                <button type="button" class="btn btn-primary btn-sm" id="add-quotation-row">Add Row</button>
+                <h5 class="mb-0">Project Items</h5>
+                <button type="button" class="btn btn-primary btn-sm" id="add-item-row">Add Row</button>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-bordered table-sm" id="quotation-table">
+                    <table class="table table-bordered table-sm" id="item-table">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 40%;">Description</th>
-                                <th style="width: 10%;">Qty</th>
-                                <th style="width: 15%;">Rate</th>
-                                <th style="width: 10%;">Discount (%)</th>
-                                <th style="width: 15%;">Final Amount</th>
-                                <th style="width: 10%;">Action</th>
+                                <th style="min-width: 200px;">Description</th>
+                                <th style="min-width: 80px;">Height</th>
+                                <th style="min-width: 80px;">Width</th>
+                                <th style="min-width: 80px;">Fold</th>
+                                <th style="min-width: 80px;">Meter</th>
+                                <th style="min-width: 80px;">Part</th>
+                                <th style="min-width: 80px;">Qty</th>
+                                <th style="min-width: 100px;">Rate</th>
+                                <th style="min-width: 100px;">Discount (%)</th>
+                                <th style="min-width: 100px;">Final Amount</th>
+                                <th style="min-width: 150px;">Company Name</th>
+                                <th style="min-width: 100px;">Booklet No</th>
+                                <th style="min-width: 100px;">Page No</th>
+                                <th style="min-width: 200px;">Reference Image</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -93,9 +102,9 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <th colspan="4" class="text-end">Total:</th>
+                                <th colspan="9" class="text-end">Total:</th>
                                 <th id="quotation-total">0.00</th>
-                                <th></th>
+                                <th colspan="5"></th>
                             </tr>
                         </tfoot>
                     </table>
@@ -148,31 +157,48 @@ document.addEventListener('DOMContentLoaded', function () {
         dateInput.value = `${yyyy}-${mm}-${dd}`;
     }
 
-    // --- Quotation Logic ---
-    const quotationTableBody = document.querySelector('#quotation-table tbody');
-    const addQuotationRowBtn = document.getElementById('add-quotation-row');
-    const quotationTotalEl = document.getElementById('quotation-total');
+    // --- Items Logic ---
+    const itemTableBody = document.querySelector('#item-table tbody');
+    const addItemRowBtn = document.getElementById('add-item-row');
+    const itemTotalEl = document.getElementById('quotation-total');
 
-    let quotationRowCount = 0;
-
-    function addQuotationRow() {
-        quotationRowCount++;
+    function addItemRow() {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td><input type="text" class="form-control form-control-sm" name="quotation_description[]"></td>
-            <td><input type="number" class="form-control form-control-sm qty" name="quotation_qty[]" value="1" step="0.01"></td>
-            <td><input type="number" class="form-control form-control-sm rate" name="quotation_rate[]" value="0" step="0.01"></td>
-            <td><input type="number" class="form-control form-control-sm discount" name="quotation_discount_percent[]" value="0" step="0.01"></td>
-            <td class="final-amount">0.00</td>
+            <td><input type="text" class="form-control form-control-sm" name="item_description[]"></td>
+            <td><input type="number" class="form-control form-control-sm height" name="item_height[]" value="0" step="0.01"></td>
+            <td><input type="number" class="form-control form-control-sm width" name="item_width[]" value="0" step="0.01"></td>
+            <td><input type="number" class="form-control form-control-sm fold" name="item_fold[]" value="12" step="0.01"></td>
+            <td><input type="number" class="form-control form-control-sm meter" name="item_meter[]" value="0" step="0.01" readonly tabindex="-1"></td>
+            <td><input type="number" class="form-control form-control-sm part" name="item_part[]" value="0" step="0.01" readonly tabindex="-1"></td>
+            <td><input type="number" class="form-control form-control-sm qty" name="item_qty[]" value="0" step="0.01" readonly tabindex="-1"></td>
+            <td><input type="number" class="form-control form-control-sm rate" name="item_rate[]" value="0" step="0.01"></td>
+            <td><input type="number" class="form-control form-control-sm discount" name="item_discount_percent[]" value="0" step="0.01"></td>
+            <td class="final-amount align-middle text-end pe-3">0.00</td>
+            <td><input type="text" class="form-control form-control-sm" name="item_company_name[]"></td>
+            <td><input type="text" class="form-control form-control-sm" name="item_booklet_no[]"></td>
+            <td><input type="text" class="form-control form-control-sm" name="item_page_no[]"></td>
+            <td><input type="file" class="form-control form-control-sm" name="item_reference_image[]" accept="image/*"></td>
             <td><button type="button" class="btn btn-danger btn-sm delete-row">Delete</button></td>
         `;
-        quotationTableBody.appendChild(row);
+        itemTableBody.appendChild(row);
     }
 
-    function updateQuotationTotals() {
+    function updateItemTotals() {
         let total = 0;
-        quotationTableBody.querySelectorAll('tr').forEach(row => {
-            const qty = parseFloat(row.querySelector('.qty').value) || 0;
+        itemTableBody.querySelectorAll('tr').forEach(row => {
+            const height = parseFloat(row.querySelector('.height').value) || 0;
+            const width = parseFloat(row.querySelector('.width').value) || 0;
+            const fold = parseFloat(row.querySelector('.fold').value) || 0;
+            
+            const meter = (height + fold) / 39;
+            const part = width / 21;
+            const qty = part * meter;
+            
+            row.querySelector('.meter').value = meter.toFixed(2);
+            row.querySelector('.part').value = part.toFixed(2);
+            row.querySelector('.qty').value = qty.toFixed(2);
+            
             const rate = parseFloat(row.querySelector('.rate').value) || 0;
             const discount = parseFloat(row.querySelector('.discount').value) || 0;
 
@@ -183,53 +209,29 @@ document.addEventListener('DOMContentLoaded', function () {
             row.querySelector('.final-amount').textContent = finalAmount.toFixed(2);
             total += finalAmount;
         });
-        quotationTotalEl.textContent = total.toFixed(2);
+        if (itemTotalEl) {
+            itemTotalEl.textContent = total.toFixed(2);
+        }
     }
 
-    addQuotationRowBtn.addEventListener('click', addQuotationRow);
+    addItemRowBtn.addEventListener('click', addItemRow);
 
-    quotationTableBody.addEventListener('input', function(e) {
-        if (e.target.classList.contains('qty') || e.target.classList.contains('rate') || e.target.classList.contains('discount')) {
-            updateQuotationTotals();
+    itemTableBody.addEventListener('input', function(e) {
+        if (e.target.classList.contains('height') || e.target.classList.contains('width') || e.target.classList.contains('fold') || 
+            e.target.classList.contains('rate') || e.target.classList.contains('discount')) {
+            updateItemTotals();
         }
     });
 
-    quotationTableBody.addEventListener('click', function(e) {
+    itemTableBody.addEventListener('click', function(e) {
         if (e.target.classList.contains('delete-row')) {
             e.target.closest('tr').remove();
-            updateQuotationTotals();
+            updateItemTotals();
         }
     });
 
-    // --- Job Card Logic ---
-    const jobCardTableBody = document.querySelector('#job-card-table tbody');
-    const addJobCardRowBtn = document.getElementById('add-job-card-row');
-    let jobCardRowCount = 0;
-
-    function addJobCardRow() {
-        const index = jobCardRowCount++; // Use a unique incrementing index
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><input type="text" class="form-control form-control-sm" name="job_card_company_name_${index}"></td>
-            <td><input type="text" class="form-control form-control-sm" name="job_card_booklet_no_${index}"></td>
-            <td><input type="text" class="form-control form-control-sm" name="job_card_page_no_${index}"></td>
-            <td><input type="file" class="form-control form-control-sm" name="job_card_image_${index}" accept="image/*"></td>
-            <td><button type="button" class="btn btn-danger btn-sm delete-row">Delete</button></td>
-        `;
-        jobCardTableBody.appendChild(row);
-    }
-
-    addJobCardRowBtn.addEventListener('click', addJobCardRow);
-
-    jobCardTableBody.addEventListener('click', function(e) {
-        if (e.target.classList.contains('delete-row')) {
-            e.target.closest('tr').remove();
-        }
-    });
-
-    // Add initial rows
-    addQuotationRow();
-    addJobCardRow();
+    // Add initial row
+    addItemRow();
 });
 </script>
 
