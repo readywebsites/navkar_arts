@@ -122,8 +122,8 @@ async def _generate_pdf_from_html(base_url, html_content):
         await browser.close()
     return pdf_bytes
 
-def generate_quotation_pdf(request, project_id):
-    """Synchronous view to generate the quotation PDF."""
+async def generate_quotation_pdf(request, project_id):
+    """Asynchronous view to generate the quotation PDF."""
     project = get_object_or_404(Project, id=project_id)
     items = project.quotation_items.all()
     total_amount = sum(item.final_amount for item in items)
@@ -135,14 +135,14 @@ def generate_quotation_pdf(request, project_id):
     })
 
     base_url = request.build_absolute_uri('/')
-    pdf_bytes = asyncio.run(_generate_pdf_from_html(base_url, html_string))
+    pdf_bytes = await _generate_pdf_from_html(base_url, html_string)
 
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="quotation_{project.id}.pdf"'
     return response
 
-def generate_job_card_pdf(request, project_id):
-    """Synchronous view to generate the job card PDF."""
+async def generate_job_card_pdf(request, project_id):
+    """Asynchronous view to generate the job card PDF."""
     project = get_object_or_404(Project, id=project_id)
     
     html_string = render_to_string('generator/job_card_pdf.html', {
@@ -151,7 +151,7 @@ def generate_job_card_pdf(request, project_id):
     })
 
     base_url = request.build_absolute_uri('/')
-    pdf_bytes = asyncio.run(_generate_pdf_from_html(base_url, html_string))
+    pdf_bytes = await _generate_pdf_from_html(base_url, html_string)
 
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="job_card_{project.id}.pdf"'
