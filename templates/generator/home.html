@@ -112,31 +112,7 @@
             </div>
         </div>
 
-        <!-- Job Card Items -->
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Job Card Items</h5>
-                <button type="button" class="btn btn-primary btn-sm" id="add-job-card-row">Add Row</button>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-sm" id="job-card-table">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Company Name</th>
-                                <th>Booklet No</th>
-                                <th>Page No</th>
-                                <th>Reference Image</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Dynamic rows will be inserted here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+       
 
         <!-- Sticky Generate Button -->
         <div class="sticky-bottom-container text-center">
@@ -162,28 +138,32 @@ document.addEventListener('DOMContentLoaded', function () {
     const addItemRowBtn = document.getElementById('add-item-row');
     const itemTotalEl = document.getElementById('quotation-total');
 
-    function addItemRow() {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><input type="text" class="form-control form-control-sm" name="item_description[]"></td>
-            <td><input type="number" class="form-control form-control-sm height" name="item_height[]" value="0" step="0.01"></td>
-            <td><input type="number" class="form-control form-control-sm width" name="item_width[]" value="0" step="0.01"></td>
-            <td><input type="number" class="form-control form-control-sm fold" name="item_fold[]" value="12" step="0.01"></td>
-            <td><input type="number" class="form-control form-control-sm meter" name="item_meter[]" value="0" step="0.01" readonly tabindex="-1"></td>
-            <td><input type="number" class="form-control form-control-sm part" name="item_part[]" value="0" step="0.01" readonly tabindex="-1"></td>
-            <td><input type="number" class="form-control form-control-sm qty" name="item_qty[]" value="0" step="0.01" readonly tabindex="-1"></td>
-            <td><input type="number" class="form-control form-control-sm rate" name="item_rate[]" value="0" step="0.01"></td>
-            <td><input type="number" class="form-control form-control-sm discount" name="item_discount_percent[]" value="0" step="0.01"></td>
-            <td class="final-amount align-middle text-end pe-3">0.00</td>
-            <td><input type="text" class="form-control form-control-sm" name="item_company_name[]"></td>
-            <td><input type="text" class="form-control form-control-sm" name="item_booklet_no[]"></td>
-            <td><input type="text" class="form-control form-control-sm" name="item_page_no[]"></td>
-            <td><input type="file" class="form-control form-control-sm" name="item_reference_image[]" accept="image/*"></td>
-            <td><button type="button" class="btn btn-danger btn-sm delete-row">Delete</button></td>
-        `;
-        itemTableBody.appendChild(row);
-    }
+   function addItemRow() {
+    const index = itemTableBody.children.length;
 
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td><input type="text" class="form-control form-control-sm" name="quotation_description[]"></td>
+        <td><input type="number" class="form-control form-control-sm height" value="0"></td>
+        <td><input type="number" class="form-control form-control-sm width" value="0"></td>
+        <td><input type="number" class="form-control form-control-sm fold" value="12"></td>
+        <td><input type="number" class="form-control form-control-sm meter" readonly></td>
+        <td><input type="number" class="form-control form-control-sm part" readonly></td>
+        <td><input type="number" class="form-control form-control-sm qty" name="quotation_qty[]" readonly></td>
+        <td><input type="number" class="form-control form-control-sm rate" name="quotation_rate[]" value="0"></td>
+        <td><input type="number" class="form-control form-control-sm discount" name="quotation_discount_percent[]" value="0"></td>
+        <td class="final-amount text-end">0.00</td>
+
+        <!-- ✅ FIXED -->
+        <td><input type="text" class="form-control form-control-sm" name="company_name_${index}"></td>
+        <td><input type="text" class="form-control form-control-sm" name="booklet_no_${index}"></td>
+        <td><input type="text" class="form-control form-control-sm" name="page_no_${index}"></td>
+
+        <td><input type="file" name="reference_image_${index}" class="form-control form-control-sm"></td>
+        <td><button type="button" class="btn btn-danger btn-sm delete-row">Delete</button></td>
+    `;
+    itemTableBody.appendChild(row);
+}
     function updateItemTotals() {
         let total = 0;
         itemTableBody.querySelectorAll('tr').forEach(row => {
