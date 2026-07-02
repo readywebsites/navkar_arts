@@ -28,9 +28,14 @@
 <body>
 
 <div class="container py-5">
-    <div class="text-center mb-4">
-        <h1 class="fw-bold">Navkar Arts</h1>
-        <p class="lead">Quotation & Job Card Generator</p>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold mb-0">Navkar Arts</h1>
+            <p class="lead mb-0">Quotation & Job Card Generator</p>
+        </div>
+        <a href="{% url 'generator:project_list' %}" class="btn btn-outline-info">
+            <i class="bi bi-list-ul me-2"></i>View All Projects
+        </a>
     </div>
 
     <form action="{% url 'generator:home' %}" method="post" enctype="multipart/form-data" id="main-form">
@@ -149,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <td><input type="number" class="form-control form-control-sm fold" value="12"></td>
         <td><input type="number" class="form-control form-control-sm meter" readonly></td>
         <td><input type="number" class="form-control form-control-sm part" readonly></td>
-        <td><input type="number" class="form-control form-control-sm qty" name="quotation_qty[]" readonly></td>
+        <td><input type="number" class="form-control form-control-sm qty" name="quotation_qty[]"></td>
         <td><input type="number" class="form-control form-control-sm rate" name="quotation_rate[]" value="0"></td>
         <td><input type="number" class="form-control form-control-sm discount" name="quotation_discount_percent[]" value="0"></td>
         <td class="final-amount text-end">0.00</td>
@@ -164,20 +169,27 @@ document.addEventListener('DOMContentLoaded', function () {
     `;
     itemTableBody.appendChild(row);
 }
-    function updateItemTotals() {
+    function updateItemTotals(recalculateQty = true) {
         let total = 0;
-        itemTableBody.querySelectorAll('tr').forEach(row => {
+        itemTableBody.querySelectorAll('tr').forEach(row => { 
             const height = parseFloat(row.querySelector('.height').value) || 0;
             const width = parseFloat(row.querySelector('.width').value) || 0;
             const fold = parseFloat(row.querySelector('.fold').value) || 0;
             
-            const meter = (height + fold) / 39;
-            const part = width / 21;
-            const qty = part * meter;
-            
-            row.querySelector('.meter').value = meter.toFixed(2);
-            row.querySelector('.part').value = part.toFixed(2);
-            row.querySelector('.qty').value = qty.toFixed(2);
+            let qty;
+
+            if (recalculateQty) {
+                const meter = (height + fold) / 39;
+                const part = width / 21;
+                const calculatedQty = part * meter;
+                qty = Math.ceil(calculatedQty);
+                
+                row.querySelector('.meter').value = meter.toFixed(2);
+                row.querySelector('.part').value = part.toFixed(2);
+                row.querySelector('.qty').value = qty;
+            } else {
+                qty = parseFloat(row.querySelector('.qty').value) || 0;
+            }
             
             const rate = parseFloat(row.querySelector('.rate').value) || 0;
             const discount = parseFloat(row.querySelector('.discount').value) || 0;
@@ -197,9 +209,11 @@ document.addEventListener('DOMContentLoaded', function () {
     addItemRowBtn.addEventListener('click', addItemRow);
 
     itemTableBody.addEventListener('input', function(e) {
-        if (e.target.classList.contains('height') || e.target.classList.contains('width') || e.target.classList.contains('fold') || 
-            e.target.classList.contains('rate') || e.target.classList.contains('discount')) {
-            updateItemTotals();
+        const target = e.target;
+        if (target.classList.contains('height') || target.classList.contains('width') || target.classList.contains('fold')) {
+            updateItemTotals(true); // Recalculate everything including quantity
+        } else if (target.classList.contains('qty') || target.classList.contains('rate') || target.classList.contains('discount')) {
+            updateItemTotals(false); // Only recalculate totals, not the quantity
         }
     });
 

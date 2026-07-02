@@ -24,20 +24,19 @@
             padding: 10px;
             margin-bottom: 10px; /* Space between items */
             page-break-inside: avoid;
-            display: flex; /* Use flexbox for row layout */
-            align-items: center; /* Vertically align items in the center */
             width: 100%;
+            display: flex;
+            align-items: center;
         }
         .job-card-item .details {
-            flex: 1; /* Details take up available space */
-            padding-right: 10px;
+            flex-grow: 1;
+            padding-left: 15px;
         }
         .job-card-item .details p {
             margin: 0 0 5px 0;
         }
         .job-card-item .image-placeholder {
-            flex-shrink: 0; /* Prevent image from shrinking */
-            width: 150px; /* Fixed width for the image container */
+            flex: 0 0 150px; /* Do not grow, do not shrink, base width 150px */
             height: 100px; /* Fixed height for the image container */
             border: 1px dashed #ccc;
             display: flex;
@@ -62,17 +61,17 @@
     <div>
         {% for item in items %}
         <div class="job-card-item">
-            <div class="details">
-                <p><strong>Company:</strong> {{ item.company_name }}</p>
-                <p><strong>Booklet No:</strong> {{ item.booklet_no }}</p>
-                <p><strong>Page No:</strong> {{ item.page_no }}</p>
-            </div>
             <div class="image-placeholder">
                 {% if item.reference_image %}
                     <img src="{{ item.reference_image.url }}">
                 {% else %}
                     <span>No Reference Image Uploaded</span>
                 {% endif %}
+            </div>
+            <div class="details">
+                <p><strong>Company:</strong> {{ item.company_name }}</p>
+                <p><strong>Booklet No:</strong> {{ item.booklet_no }}</p>
+                <p><strong>Page No:</strong> {{ item.page_no }}</p>
             </div>
         </div>
         {% endfor %}
