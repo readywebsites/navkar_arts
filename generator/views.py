@@ -196,6 +196,7 @@ def generate_quotation_pdf(request, project_id):
         'items': items,
         'addons': addons,
         'items_total': total_amount,
+        'addons_total': addons_total,
         'grand_total': total_amount + addons_total,
     })
 
