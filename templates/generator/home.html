@@ -167,7 +167,13 @@
 
         <!-- Sticky Generate Button -->
         <div class="sticky-bottom-container text-center">
-            <button type="submit" class="btn btn-success btn-lg">Generate PDFs</button>
+            <button type="submit" class="btn btn-success btn-lg">
+                {% if project %}
+                    Save Modifications
+                {% else %}
+                    Generate PDFs
+                {% endif %}
+            </button>
         </div>
     </form>
 </div>

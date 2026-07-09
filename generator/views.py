@@ -22,6 +22,11 @@ def home_view(request, project_id=None):
         client_phone = request.POST.get('client_phone')
         site_address = request.POST.get('site_address')
 
+        # Fix: Re-fetch project object inside POST if in edit mode
+        # This ensures 'project' is correctly scoped for the update logic.
+        if project_id:
+            project = get_object_or_404(Project, id=project_id)
+
         # If we are editing, fetch the existing project. Otherwise, create a new one.
         if project:
             client = project.client
@@ -182,11 +187,16 @@ def generate_quotation_pdf(request, project_id):
 
     items = project.quotation_items.all()
     total_amount = sum(item.final_amount for item in items)
+    
+    addons = project.addon_items.all()
+    addons_total = sum(addon.amount for addon in addons)
 
     html = render_to_string('generator/quotation_pdf.html', {
         'project': project,
         'items': items,
-        'total_amount': total_amount
+        'addons': addons,
+        'items_total': total_amount,
+        'grand_total': total_amount + addons_total,
     })
 
     base_url = request.build_absolute_uri('/')

@@ -6,118 +6,152 @@
     <style>
         @page {
             size: A4;
-            margin: 1.5cm;
+            margin: 1cm;
         }
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 11px;
             color: #333;
-            font-size: 12px;
         }
         .header, .footer {
-            width: 100%;
+            text-align: center;
             position: fixed;
+            width: 100%;
         }
         .header {
-            top: -1cm;
-            text-align: center;
+            top: -0.5cm;
         }
         .footer {
-            bottom: -1cm;
-            text-align: center;
-            font-size: 10px;
+            bottom: 0;
+            font-size: 9px;
         }
-        .company-name {
-            font-size: 24px;
-            font-weight: bold;
-            color: #000;
-            text-align: center;
-            margin-bottom: 20px;
+        .content {
+            margin-top: 2.5cm;
+            margin-bottom: 1.5cm;
         }
         .client-details {
             margin-bottom: 20px;
-            border: 1px solid #ccc;
             padding: 10px;
+            border: 1px solid #eee;
             border-radius: 5px;
         }
         .client-details p {
-            margin: 0;
-            line-height: 1.6;
+            margin: 2px 0;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-bottom: 20px;
         }
         th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
+            border: 1px solid #ddd;
+            padding: 6px;
             text-align: left;
         }
         th {
             background-color: #f2f2f2;
         }
-        .total-row td {
-            font-weight: bold;
-        }
-        .text-right {
+        .text-end {
             text-align: right;
         }
-        .item-row {
-            page-break-inside: avoid;
+        .totals-table {
+            width: 40%;
+            float: right;
         }
-        /* Logic for pagination: 30 items per page */
-        .item-row:nth-child(30n) {
-            page-break-after: always;
+        .totals-table td, .totals-table th {
+            border: none;
+        }
+        .totals-table tr.grand-total th, .totals-table tr.grand-total td {
+            border-top: 2px solid #333;
+            font-size: 1.2em;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
+
     <div class="header">
-        <p>Quotation</p>
+        <h1>Navkar Arts - Quotation</h1>
     </div>
 
-    <div class="footer">
-        <p>Navkar Arts - Page <span class="page-number"></span></p>
-    </div>
+    <div class="content">
+        <div class="client-details">
+            <p><strong>Client:</strong> {{ project.client.name }}</p>
+            <p><strong>Phone:</strong> {{ project.client.phone }}</p>
+            <p><strong>Address:</strong> {{ project.client.address }}</p>
+            <p><strong>Site Address:</strong> {{ project.site_address }}</p>
+            <p><strong>Date:</strong> {{ project.date|date:"F d, Y" }}</p>
+        </div>
 
-    <h1 class="company-name">Navkar Arts</h1>
+        <h3>Project Items</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th class="text-end">Qty</th>
+                    <th class="text-end">Rate</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-end">Discount (%)</th>
+                    <th class="text-end">Final Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.description }}</td>
+                    <td class="text-end">{{ item.quantity|floatformat:2 }}</td>
+                    <td class="text-end">{{ item.rate|floatformat:2 }}</td>
+                    <td class="text-end">{{ item.total|floatformat:2 }}</td>
+                    <td class="text-end">{{ item.discount_percent|floatformat:2 }}</td>
+                    <td class="text-end">{{ item.final_amount|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-    <div class="client-details">
-        <p><strong>Client:</strong> {{ project.client.name }}</p>
-        <p><strong>Address:</strong> {{ project.client.address }}</p>
-        <p><strong>Phone:</strong> {{ project.client.phone }}</p>
-        <p><strong>Site Address:</strong> {{ project.site_address }}</p>
-        <p><strong>Date:</strong> {{ project.date|date:"d-m-Y" }}</p>
-    </div>
+        {% if addons %}
+        <h3>Add-ons</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th class="text-end">RFT/SQFT</th>
+                    <th class="text-end">Rate</th>
+                    <th class="text-end">Amount</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for addon in addons %}
+                <tr>
+                    <td>{{ addon.description }}</td>
+                    <td class="text-end">{{ addon.rft_sqft|floatformat:2 }}</td>
+                    <td class="text-end">{{ addon.rate|floatformat:2 }}</td>
+                    <td class="text-end">{{ addon.amount|floatformat:2 }}</td>
+                    <td>{{ addon.remarks|default:"" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
 
-    <table>
-        <thead>
+        <table class="totals-table">
             <tr>
-                <th style="width:5%;">#</th>
-                <th style="width:45%;">Description</th>
-                <th style="width:10%;" class="text-right">Qty</th>
-                <th style="width:15%;" class="text-right">Rate</th>
-                <th style="width:10%;" class="text-right">Discount</th>
-                <th style="width:15%;" class="text-right">Amount</th>
+                <th>Items Total:</th>
+                <td class="text-end">{{ items_total|floatformat:2 }}</td>
             </tr>
-        </thead>
-        <tbody>
-            {% for item in items %}
-            <tr class="item-row">
-                <td>{{ forloop.counter }}</td>
-                <td>{{ item.description }}</td>
-                <td class="text-right">{{ item.quantity|floatformat:2 }}</td>
-                <td class="text-right">{{ item.rate|floatformat:2 }}</td>
-                <td class="text-right">{{ item.discount_percent|floatformat:2 }}%</td>
-                <td class="text-right">{{ item.final_amount|floatformat:2 }}</td>
+            {% if addons %}
+            <tr>
+                <th>Add-ons Total:</th>
+                <td class="text-end">{{ addons_total|floatformat:2 }}</td>
             </tr>
-            {% endfor %}
-            <tr class="total-row">
-                <td colspan="5" class="text-right"><strong>Total Amount</strong></td>
-                <td class="text-right"><strong>{{ total_amount|floatformat:2 }}</strong></td>
+            {% endif %}
+            <tr class="grand-total">
+                <th>Grand Total:</th>
+                <td class="text-end">{{ grand_total|floatformat:2 }}</td>
             </tr>
-        </tbody>
-    </table>
+        </table>
+    </div>
 
 </body>
 </html>
