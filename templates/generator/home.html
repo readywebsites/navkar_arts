@@ -1,4 +1,3 @@
-{% load generator_extras %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,12 +38,8 @@
         </a>
     </div>
 
-    <form action="{% url 'generator:home' %}" method="post" enctype="multipart/form-data" id="main-form">
+    <form action="{% if project %}{% url 'generator:edit_project' project.id %}{% else %}{% url 'generator:home' %}{% endif %}" method="post" enctype="multipart/form-data" id="main-form">
         {% csrf_token %}
-        
-        {% if project %}
-        <input type="hidden" name="project_id" value="{{ project.id }}">
-        {% endif %}
 
         <!-- Client & Project Details -->
         <div class="card">
@@ -325,9 +320,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Add initial row
     {% if project %}
-        // If editing, populate existing items. We assume a 1-to-1 correspondence.
-        {% for job_card_item in project.job_card_items.all %}
-            {% with quotation_item=project.quotation_items.all|get_item:forloop.counter0 %}
+        // If editing, populate existing combined items
+        {% for quotation_item, job_card_item in combined_items %}
             addItemRow();
             const lastItemRow = itemTableBody.lastElementChild;
             lastItemRow.querySelector('[name="quotation_description[]"]').value = `{{ quotation_item.description|default:""|escapejs }}`;
@@ -340,7 +334,6 @@ document.addEventListener('DOMContentLoaded', function () {
             lastItemRow.querySelector(`[name^="company_name_"]`).value = `{{ job_card_item.company_name|default:""|escapejs }}`;
             lastItemRow.querySelector(`[name^="booklet_no_"]`).value = `{{ job_card_item.booklet_no|default:""|escapejs }}`;
             lastItemRow.querySelector(`[name^="page_no_"]`).value = `{{ job_card_item.page_no|default:""|escapejs }}`;
-            {% endwith %}
         {% endfor %}
 
         {% for addon in project.addon_items.all %}

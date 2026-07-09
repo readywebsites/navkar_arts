@@ -28,28 +28,22 @@ def home_view(request, project_id=None):
             client.address = client_address
             client.phone = client_phone
             client.save()
+        
+        project.site_address = site_address
+        project.save()
 
-            project.site_address = site_address
-            project.save()
+        # Clear old items before saving new ones
+        project.quotation_items.all().delete()
+        project.job_card_items.all().delete()
+        project.addon_items.all().delete()
+    else:
+        # Use update_or_create for cleaner client handling
+        client, _ = Client.objects.update_or_create(
+            phone=client_phone,
+            defaults={'name': client_name, 'address': client_address}
+        )
 
-            # Clear old items before saving new ones
-            project.quotation_items.all().delete()
-            project.job_card_items.all().delete()
-            project.addon_items.all().delete()
-        else:
-            client, created = Client.objects.get_or_create(
-                phone=client_phone,
-                defaults={'name': client_name, 'address': client_address}
-            )
-            if not created:
-                client.name = client_name
-                client.address = client_address
-                client.save()
-
-            project = Project.objects.create(
-                client=client,
-                site_address=site_address
-            )
+        project = Project.objects.create(client=client, site_address=site_address)
 
         # ================= QUOTATION + JOB CARD =================
 
@@ -104,11 +98,21 @@ def home_view(request, project_id=None):
 
         return redirect('generator:project_detail', project_id=project.id)
 
+    # Prepare context for template
     context = {
         'project': project
     }
     if project:
         context['date'] = project.date
+        # Pre-zip the items for easier iteration in the template
+        quotation_items = project.quotation_items.all()
+        job_card_items = project.job_card_items.all()
+        
+        # Ensure we have a matching item for each, even if empty
+        num_items = max(len(quotation_items), len(job_card_items))
+        
+        context['combined_items'] = list(zip(list(quotation_items) + [None]*num_items, list(job_card_items) + [None]*num_items))[:num_items]
+
     return render(request, 'generator/home.html', context)
 
 
