@@ -325,18 +325,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Add initial row
     {% if project %}
-        // If editing, populate existing items
-        {% for item in project.quotation_items.all %}
-            {% with job_card_item=item.project.job_card_items.all|slice:":1"|first %}
+        // If editing, populate existing items. We assume a 1-to-1 correspondence.
+        {% for job_card_item in project.job_card_items.all %}
+            {% with quotation_item=project.quotation_items.all|get_item:forloop.counter0 %}
             addItemRow();
             const lastItemRow = itemTableBody.lastElementChild;
-            lastItemRow.querySelector('[name="quotation_description[]"]').value = `{{ item.description|escapejs }}`;
+            lastItemRow.querySelector('[name="quotation_description[]"]').value = `{{ quotation_item.description|default:""|escapejs }}`;
             lastItemRow.querySelector('[name="height[]"]').value = `{{ job_card_item.height|default:0 }}`;
             lastItemRow.querySelector('[name="width[]"]').value = `{{ job_card_item.width|default:0 }}`;
             lastItemRow.querySelector('[name="part[]"]').value = `{{ job_card_item.part|default:0 }}`;
-            lastItemRow.querySelector('[name="quotation_qty[]"]').value = `{{ item.quantity|floatformat:2 }}`;
-            lastItemRow.querySelector('[name="quotation_rate[]"]').value = `{{ item.rate }}`;
-            lastItemRow.querySelector('[name="quotation_discount_percent[]"]').value = `{{ item.discount_percent }}`;
+            lastItemRow.querySelector('[name="quotation_qty[]"]').value = `{{ quotation_item.quantity|default:0|floatformat:2 }}`;
+            lastItemRow.querySelector('[name="quotation_rate[]"]').value = `{{ quotation_item.rate|default:0 }}`;
+            lastItemRow.querySelector('[name="quotation_discount_percent[]"]').value = `{{ quotation_item.discount_percent|default:0 }}`;
             lastItemRow.querySelector(`[name^="company_name_"]`).value = `{{ job_card_item.company_name|default:""|escapejs }}`;
             lastItemRow.querySelector(`[name^="booklet_no_"]`).value = `{{ job_card_item.booklet_no|default:""|escapejs }}`;
             lastItemRow.querySelector(`[name^="page_no_"]`).value = `{{ job_card_item.page_no|default:""|escapejs }}`;
