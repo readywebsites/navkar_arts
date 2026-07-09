@@ -28,22 +28,22 @@ def home_view(request, project_id=None):
             client.address = client_address
             client.phone = client_phone
             client.save()
-        
-        project.site_address = site_address
-        project.save()
+            
+            project.site_address = site_address
+            project.save()
 
-        # Clear old items before saving new ones
-        project.quotation_items.all().delete()
-        project.job_card_items.all().delete()
-        project.addon_items.all().delete()
-    else:
-        # Use update_or_create for cleaner client handling
-        client, _ = Client.objects.update_or_create(
-            phone=client_phone,
-            defaults={'name': client_name, 'address': client_address}
-        )
+            # Clear old items before saving new ones
+            project.quotation_items.all().delete()
+            project.job_card_items.all().delete()
+            project.addon_items.all().delete()
+        else:
+            # Use update_or_create for cleaner client handling
+            client, _ = Client.objects.update_or_create(
+                phone=client_phone,
+                defaults={'name': client_name, 'address': client_address}
+            )
 
-        project = Project.objects.create(client=client, site_address=site_address)
+            project = Project.objects.create(client=client, site_address=site_address)
 
         # ================= QUOTATION + JOB CARD =================
 
