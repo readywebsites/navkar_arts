@@ -45,6 +45,9 @@ class JobCardItem(models.Model):
     company_name = models.CharField(max_length=100)
     booklet_no = models.CharField(max_length=50)
     page_no = models.CharField(max_length=50)
+    height = models.FloatField(default=0)
+    width = models.FloatField(default=0)
+    part = models.FloatField(default=0)
     reference_image = models.ImageField(upload_to='job_card_images/', blank=True, null=True)
 
     def __str__(self):

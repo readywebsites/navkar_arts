@@ -72,6 +72,9 @@
                 <p><strong>Company:</strong> {{ item.company_name }}</p>
                 <p><strong>Booklet No:</strong> {{ item.booklet_no }}</p>
                 <p><strong>Page No:</strong> {{ item.page_no }}</p>
+                <p><strong>Height:</strong> {{ item.height|floatformat:2 }} | 
+                   <strong>Width:</strong> {{ item.width|floatformat:2 }} | 
+                   <strong>Part:</strong> {{ item.part|floatformat:0 }}</p>
             </div>
         </div>
         {% endfor %}

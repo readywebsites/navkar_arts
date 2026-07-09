@@ -39,6 +39,10 @@ def home_view(request):
         qtys = request.POST.getlist('quotation_qty[]')
         rates = request.POST.getlist('quotation_rate[]')
         discounts = request.POST.getlist('quotation_discount_percent[]')
+        
+        heights = request.POST.getlist('height[]')
+        widths = request.POST.getlist('width[]')
+        parts = request.POST.getlist('part[]')
 
         for i in range(len(descriptions)):
             if descriptions[i]:
@@ -57,6 +61,9 @@ def home_view(request):
                     company_name=request.POST.get(f'company_name_{i}', ''),
                     booklet_no=request.POST.get(f'booklet_no_{i}', ''),
                     page_no=request.POST.get(f'page_no_{i}', ''),
+                    height=float(heights[i] or 0),
+                    width=float(widths[i] or 0),
+                    part=float(parts[i] or 0),
                     reference_image=request.FILES.get(f'reference_image_{i}')
                 )
         

@@ -200,11 +200,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const row = document.createElement('tr');
     row.innerHTML = `
         <td><input type="text" class="form-control form-control-sm" name="quotation_description[]"></td>
-        <td><input type="number" class="form-control form-control-sm height" value="0"></td>
-        <td><input type="number" class="form-control form-control-sm width" value="0"></td>
+        <td><input type="number" class="form-control form-control-sm height" name="height[]" value="0"></td>
+        <td><input type="number" class="form-control form-control-sm width" name="width[]" value="0"></td>
         <td><input type="number" class="form-control form-control-sm fold" value="12"></td>
         <td><input type="number" class="form-control form-control-sm meter" readonly></td>
-        <td><input type="number" class="form-control form-control-sm part"></td>
+        <td><input type="number" class="form-control form-control-sm part" name="part[]"></td>
         <td><input type="number" class="form-control form-control-sm qty" name="quotation_qty[]" readonly></td>
         <td><input type="number" class="form-control form-control-sm rate" name="quotation_rate[]" value="0"></td>
         <td><input type="number" class="form-control form-control-sm discount" name="quotation_discount_percent[]" value="0"></td>
