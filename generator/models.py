@@ -49,3 +49,17 @@ class JobCardItem(models.Model):
 
     def __str__(self):
         return f"{self.company_name} - Booklet {self.booklet_no}, Page {self.page_no}"
+
+class AddonItem(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='addon_items')
+    description = models.CharField(max_length=255)
+    rft_sqft = models.FloatField()
+    rate = models.FloatField()
+    remarks = models.TextField(blank=True, null=True)
+
+    @property
+    def amount(self):
+        return self.rft_sqft * self.rate
+
+    def __str__(self):
+        return self.description

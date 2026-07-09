@@ -105,14 +105,60 @@
                         <tbody>
                             <!-- Dynamic rows will be inserted here -->
                         </tbody>
-                        <tfoot>
-                            <tr>
-                                <th colspan="9" class="text-end">Total:</th>
-                                <th id="quotation-total">0.00</th>
-                                <th colspan="5"></th>
-                            </tr>
-                        </tfoot>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add-ons -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Add-ons</h5>
+                <button type="button" class="btn btn-primary btn-sm" id="add-addon-row">Add Add-on</button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm" id="addon-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="min-width: 300px;">Description</th>
+                                <th style="min-width: 100px;">RFT/SQFT</th>
+                                <th style="min-width: 100px;">Rate</th>
+                                <th style="min-width: 120px;">Amount</th>
+                                <th style="min-width: 300px;">Remarks</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dynamic addon rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Totals -->
+        <div class="card">
+            <div class="card-body">
+                <div class="row justify-content-end">
+                    <div class="col-md-5">
+                        <table class="table table-sm table-borderless">
+                            <tbody>
+                                <tr>
+                                    <th class="text-end">Items Total:</th>
+                                    <td class="text-end" id="items-subtotal">0.00</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-end">Add-ons Total:</th>
+                                    <td class="text-end" id="addons-subtotal">0.00</td>
+                                </tr>
+                                <tr class="border-top">
+                                    <th class="text-end fs-5">Grand Total:</th>
+                                    <td class="text-end fs-5 fw-bold" id="grand-total">0.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -141,7 +187,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- Items Logic ---
     const itemTableBody = document.querySelector('#item-table tbody');
     const addItemRowBtn = document.getElementById('add-item-row');
-    const itemTotalEl = document.getElementById('quotation-total');
+    const addonTableBody = document.querySelector('#addon-table tbody');
+    const addAddonRowBtn = document.getElementById('add-addon-row');
+
+    const itemsSubtotalEl = document.getElementById('items-subtotal');
+    const addonsSubtotalEl = document.getElementById('addons-subtotal');
+    const grandTotalEl = document.getElementById('grand-total');
 
    function addItemRow() {
     const index = itemTableBody.children.length;
@@ -168,8 +219,23 @@ document.addEventListener('DOMContentLoaded', function () {
     `;
     itemTableBody.appendChild(row);
 }
-    function updateItemTotals(recalculatePart = false) {
-        let total = 0;
+
+    function addAddonRow() {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" class="form-control form-control-sm" name="addon_description[]"></td>
+            <td><input type="number" class="form-control form-control-sm addon-rft" value="0"></td>
+            <td><input type="number" class="form-control form-control-sm addon-rate" name="addon_rate[]" value="0"></td>
+            <td class="addon-amount text-end">0.00</td>
+            <td><input type="text" class="form-control form-control-sm" name="addon_remarks[]"></td>
+            <td><button type="button" class="btn btn-danger btn-sm delete-row">Delete</button></td>
+            <input type="hidden" name="addon_rft_sqft[]" class="addon-rft-hidden">
+        `;
+        addonTableBody.appendChild(row);
+    }
+
+    function updateTotals(recalculatePart = false) {
+        let itemsTotal = 0;
         itemTableBody.querySelectorAll('tr').forEach(row => { 
             const height = parseFloat(row.querySelector('.height').value) || 0;
             const width = parseFloat(row.querySelector('.width').value) || 0;
@@ -196,30 +262,59 @@ document.addEventListener('DOMContentLoaded', function () {
             const finalAmount = rowTotal - discountAmount;
 
             row.querySelector('.final-amount').textContent = finalAmount.toFixed(2);
-            total += finalAmount;
+            itemsTotal += finalAmount;
         });
-        if (itemTotalEl) {
-            itemTotalEl.textContent = total.toFixed(2);
+
+        let addonsTotal = 0;
+        addonTableBody.querySelectorAll('tr').forEach(row => {
+            const rft = parseFloat(row.querySelector('.addon-rft').value) || 0;
+            const rate = parseFloat(row.querySelector('.addon-rate').value) || 0;
+            const amount = rft * rate;
+
+            row.querySelector('.addon-amount').textContent = amount.toFixed(2);
+            row.querySelector('.addon-rft-hidden').value = rft; // Update hidden input for form submission
+            addonsTotal += amount;
+        });
+
+        if (itemsSubtotalEl) itemsSubtotalEl.textContent = itemsTotal.toFixed(2);
+        if (addonsSubtotalEl) addonsSubtotalEl.textContent = addonsTotal.toFixed(2);
+        if (grandTotalEl) {
+            const grandTotal = itemsTotal + addonsTotal;
+            grandTotalEl.textContent = grandTotal.toFixed(2);
         }
     }
 
     addItemRowBtn.addEventListener('click', addItemRow);
+    addAddonRowBtn.addEventListener('click', addAddonRow);
 
     itemTableBody.addEventListener('input', function(e) {
         const target = e.target;
         if (target.classList.contains('width')) {
-            updateItemTotals(true); // Recalculate part
+            updateTotals(true); // Recalculate part
         } else if (target.classList.contains('height') || target.classList.contains('fold') || 
                    target.classList.contains('part') || target.classList.contains('rate') || 
                    target.classList.contains('discount')) {
-            updateItemTotals(false); // Recalculate totals, but not the part
+            updateTotals(false); // Recalculate totals, but not the part
+        }
+    });
+
+    addonTableBody.addEventListener('input', function(e) {
+        const target = e.target;
+        if (target.classList.contains('addon-rft') || target.classList.contains('addon-rate')) {
+            updateTotals(false);
         }
     });
 
     itemTableBody.addEventListener('click', function(e) {
         if (e.target.classList.contains('delete-row')) {
             e.target.closest('tr').remove();
-            updateItemTotals();
+            updateTotals();
+        }
+    });
+    addonTableBody.addEventListener('click', function(e) {
+        if (e.target.classList.contains('delete-row')) {
+            e.target.closest('tr').remove();
+            updateTotals();
         }
     });
 

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.urls import reverse
-from .models import Client, Project, QuotationItem, JobCardItem
+from .models import Client, Project, QuotationItem, JobCardItem, AddonItem
 from urllib.parse import quote
 from asgiref.sync import async_to_sync
 from playwright.async_api import async_playwright
@@ -58,6 +58,23 @@ def home_view(request):
                     booklet_no=request.POST.get(f'booklet_no_{i}', ''),
                     page_no=request.POST.get(f'page_no_{i}', ''),
                     reference_image=request.FILES.get(f'reference_image_{i}')
+                )
+        
+        # ================= ADD-ONS =================
+
+        addon_descriptions = request.POST.getlist('addon_description[]')
+        addon_rfts = request.POST.getlist('addon_rft_sqft[]')
+        addon_rates = request.POST.getlist('addon_rate[]')
+        addon_remarks = request.POST.getlist('addon_remarks[]')
+
+        for i in range(len(addon_descriptions)):
+            if addon_descriptions[i] and addon_rfts[i] and addon_rates[i]:
+                AddonItem.objects.create(
+                    project=project,
+                    description=addon_descriptions[i],
+                    rft_sqft=float(addon_rfts[i] or 0),
+                    rate=float(addon_rates[i] or 0),
+                    remarks=addon_remarks[i]
                 )
 
         return redirect('generator:project_list')
