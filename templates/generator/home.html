@@ -40,6 +40,10 @@
 
     <form action="{% url 'generator:home' %}" method="post" enctype="multipart/form-data" id="main-form">
         {% csrf_token %}
+        
+        {% if project %}
+        <input type="hidden" name="project_id" value="{{ project.id }}">
+        {% endif %}
 
         <!-- Client & Project Details -->
         <div class="card">
@@ -50,21 +54,21 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="client_name" class="form-label">Client Name</label>
-                        <input type="text" class="form-control form-control-sm" id="client_name" name="client_name" required>
+                        <input type="text" class="form-control form-control-sm" id="client_name" name="client_name" value="{{ project.client.name|default:'' }}" required>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="client_phone" class="form-label">Phone Number</label>
-                        <input type="tel" class="form-control form-control-sm" id="client_phone" name="client_phone" required>
+                        <input type="tel" class="form-control form-control-sm" id="client_phone" name="client_phone" value="{{ project.client.phone|default:'' }}" required>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="client_address" class="form-label">Client Address</label>
-                        <input type="text" class="form-control form-control-sm" id="client_address" name="client_address" required>
+                        <input type="text" class="form-control form-control-sm" id="client_address" name="client_address" value="{{ project.client.address|default:'' }}" required>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-8 mb-3">
                         <label for="site_address" class="form-label">Site Address</label>
-                        <input type="text" class="form-control form-control-sm" id="site_address" name="site_address" required>
+                        <input type="text" class="form-control form-control-sm" id="site_address" name="site_address" value="{{ project.site_address|default:'' }}" required>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="date" class="form-label">Date</label>
@@ -319,7 +323,48 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Add initial row
-    addItemRow();
+    {% if project %}
+        // If editing, populate existing items
+        {% for item in project.quotation_items.all %}
+            {% with job_card_item=item.project.job_card_items.all|slice:":1"|first %}
+            addItemRow();
+            const lastItemRow = itemTableBody.lastElementChild;
+            lastItemRow.querySelector('[name="quotation_description[]"]').value = `{{ item.description|escapejs }}`;
+            lastItemRow.querySelector('[name="height[]"]').value = `{{ job_card_item.height|default:0 }}`;
+            lastItemRow.querySelector('[name="width[]"]').value = `{{ job_card_item.width|default:0 }}`;
+            lastItemRow.querySelector('[name="part[]"]').value = `{{ job_card_item.part|default:0 }}`;
+            lastItemRow.querySelector('[name="quotation_qty[]"]').value = `{{ item.quantity|floatformat:2 }}`;
+            lastItemRow.querySelector('[name="quotation_rate[]"]').value = `{{ item.rate }}`;
+            lastItemRow.querySelector('[name="quotation_discount_percent[]"]').value = `{{ item.discount_percent }}`;
+            lastItemRow.querySelector(`[name^="company_name_"]`).value = `{{ job_card_item.company_name|default:""|escapejs }}`;
+            lastItemRow.querySelector(`[name^="booklet_no_"]`).value = `{{ job_card_item.booklet_no|default:""|escapejs }}`;
+            lastItemRow.querySelector(`[name^="page_no_"]`).value = `{{ job_card_item.page_no|default:""|escapejs }}`;
+            {% endwith %}
+        {% endfor %}
+
+        {% for addon in project.addon_items.all %}
+            addAddonRow();
+            const lastAddonRow = addonTableBody.lastElementChild;
+            lastAddonRow.querySelector('[name="addon_description[]"]').value = `{{ addon.description|escapejs }}`;
+            lastAddonRow.querySelector('.addon-rft').value = `{{ addon.rft_sqft }}`;
+            lastAddonRow.querySelector('[name="addon_rate[]"]').value = `{{ addon.rate }}`;
+            lastAddonRow.querySelector('[name="addon_remarks[]"]').value = `{{ addon.remarks|escapejs }}`;
+        {% endfor %}
+
+        if (itemTableBody.children.length === 0) {
+            addItemRow();
+        }
+        if (addonTableBody.children.length === 0) {
+            addAddonRow();
+        }
+
+    {% else %}
+        // If new project, add one empty row to start
+        addItemRow();
+        addAddonRow();
+    {% endif %}
+
+    updateTotals();
 });
 </script>
 

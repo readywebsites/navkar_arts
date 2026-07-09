@@ -10,28 +10,46 @@ from playwright.async_api import async_playwright
 
 # ================= HOME =================
 
-def home_view(request):
+def home_view(request, project_id=None):
+    project = None
+    if project_id:
+        project = get_object_or_404(Project, id=project_id)
+
     if request.method == 'POST':
         client_name = request.POST.get('client_name')
         client_address = request.POST.get('client_address')
         client_phone = request.POST.get('client_phone')
         site_address = request.POST.get('site_address')
 
-        # ✅ FIX: Update client if exists
-        client, created = Client.objects.get_or_create(
-            phone=client_phone,
-            defaults={'name': client_name, 'address': client_address}
-        )
-
-        if not created:
+        # If we are editing, fetch the existing project. Otherwise, create a new one.
+        if project:
+            client = project.client
             client.name = client_name
             client.address = client_address
+            client.phone = client_phone
             client.save()
 
-        project = Project.objects.create(
-            client=client,
-            site_address=site_address
-        )
+            project.site_address = site_address
+            project.save()
+
+            # Clear old items before saving new ones
+            project.quotation_items.all().delete()
+            project.job_card_items.all().delete()
+            project.addon_items.all().delete()
+        else:
+            client, created = Client.objects.get_or_create(
+                phone=client_phone,
+                defaults={'name': client_name, 'address': client_address}
+            )
+            if not created:
+                client.name = client_name
+                client.address = client_address
+                client.save()
+
+            project = Project.objects.create(
+                client=client,
+                site_address=site_address
+            )
 
         # ================= QUOTATION + JOB CARD =================
 
@@ -84,9 +102,14 @@ def home_view(request):
                     remarks=addon_remarks[i]
                 )
 
-        return redirect('generator:project_list')
+        return redirect('generator:project_detail', project_id=project.id)
 
-    return render(request, 'generator/home.html')
+    context = {
+        'project': project
+    }
+    if project:
+        context['date'] = project.date
+    return render(request, 'generator/home.html', context)
 
 
 # ================= PROJECT LIST =================
