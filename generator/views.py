@@ -6,6 +6,7 @@ from .models import Client, Project, QuotationItem, JobCardItem, AddonItem
 from urllib.parse import quote
 from asgiref.sync import async_to_sync
 from playwright.async_api import async_playwright
+from django.views.decorators.http import require_POST
 
 
 # ================= HOME =================
@@ -121,6 +122,15 @@ def home_view(request, project_id=None):
 def project_list_view(request):
     projects = Project.objects.all().order_by('-id')
     return render(request, 'generator/project_list.html', {'projects': projects})
+
+# ================= DELETE PROJECT =================
+
+@require_POST
+def delete_project_view(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    project.delete()
+    # Optionally, add a success message here using Django's messaging framework
+    return redirect('generator:project_list')
 
 
 # ================= PROJECT DETAIL =================
