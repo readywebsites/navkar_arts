@@ -22,12 +22,9 @@ def home_view(request, project_id=None):
         client_phone = request.POST.get('client_phone')
         site_address = request.POST.get('site_address')
 
-        # Fix: Re-fetch project object inside POST if in edit mode
-        # This ensures 'project' is correctly scoped for the update logic.
         if project_id:
             project = get_object_or_404(Project, id=project_id)
 
-        # If we are editing, fetch the existing project. Otherwise, create a new one.
         if project:
             client = project.client
             client.name = client_name
@@ -37,22 +34,17 @@ def home_view(request, project_id=None):
             
             project.site_address = site_address
             project.save()
-
-            # Clear old items before saving new ones
-            project.quotation_items.all().delete()
-            project.job_card_items.all().delete()
-            project.addon_items.all().delete()
         else:
-            # Use update_or_create for cleaner client handling
             client, _ = Client.objects.update_or_create(
                 phone=client_phone,
                 defaults={'name': client_name, 'address': client_address}
             )
-
             project = Project.objects.create(client=client, site_address=site_address)
 
         # ================= QUOTATION + JOB CARD =================
 
+        quotation_item_ids = request.POST.getlist('quotation_item_id[]')
+        job_card_item_ids = request.POST.getlist('job_card_item_id[]')
         descriptions = request.POST.getlist('quotation_description[]')
         qtys = request.POST.getlist('quotation_qty[]')
         rates = request.POST.getlist('quotation_rate[]')
@@ -61,60 +53,110 @@ def home_view(request, project_id=None):
         heights = request.POST.getlist('height[]')
         widths = request.POST.getlist('width[]')
         parts = request.POST.getlist('part[]')
+        company_names = request.POST.getlist('company_name[]')
+        booklet_nos = request.POST.getlist('booklet_no[]')
+        page_nos = request.POST.getlist('page_no[]')
+        reference_images = request.FILES.getlist('reference_image[]')
+
+        processed_quotation_ids = []
+        processed_job_card_ids = []
 
         for i in range(len(descriptions)):
             if descriptions[i]:
-                # Quotation
-                QuotationItem.objects.create(
-                    project=project,
-                    description=descriptions[i],
-                    quantity=float(qtys[i] or 0),
-                    rate=float(rates[i] or 0),
-                    discount_percent=float(discounts[i] or 0)
-                )
+                quotation_item_id = quotation_item_ids[i] if i < len(quotation_item_ids) else None
+                job_card_item_id = job_card_item_ids[i] if i < len(job_card_item_ids) else None
 
-                # Job Card (auto)
-                JobCardItem.objects.create(
-                    project=project,
-                    company_name=request.POST.get(f'company_name_{i}', ''),
-                    booklet_no=request.POST.get(f'booklet_no_{i}', ''),
-                    page_no=request.POST.get(f'page_no_{i}', ''),
-                    height=float(heights[i] or 0),
-                    width=float(widths[i] or 0),
-                    part=float(parts[i] or 0),
-                    reference_image=request.FILES.get(f'reference_image_{i}')
-                )
-        
+                # Quotation Item
+                if quotation_item_id:
+                    quotation_item = QuotationItem.objects.get(id=quotation_item_id, project=project)
+                    quotation_item.description = descriptions[i]
+                    quotation_item.quantity = float(qtys[i] or 0)
+                    quotation_item.rate = float(rates[i] or 0)
+                    quotation_item.discount_percent = float(discounts[i] or 0)
+                    quotation_item.save()
+                    processed_quotation_ids.append(quotation_item.id)
+                else:
+                    quotation_item = QuotationItem.objects.create(
+                        project=project,
+                        description=descriptions[i],
+                        quantity=float(qtys[i] or 0),
+                        rate=float(rates[i] or 0),
+                        discount_percent=float(discounts[i] or 0)
+                    )
+
+                # Job Card Item
+                if job_card_item_id:
+                    job_card_item = JobCardItem.objects.get(id=job_card_item_id, project=project)
+                    job_card_item.height = float(heights[i] or 0)
+                    job_card_item.width = float(widths[i] or 0)
+                    job_card_item.part = float(parts[i] or 0)
+                    job_card_item.company_name = company_names[i]
+                    job_card_item.booklet_no = booklet_nos[i]
+                    job_card_item.page_no = page_nos[i]
+                    if i < len(reference_images) and reference_images[i]:
+                        job_card_item.reference_image = reference_images[i]
+                    job_card_item.save()
+                    processed_job_card_ids.append(job_card_item.id)
+                else:
+                    JobCardItem.objects.create(
+                        project=project,
+                        height=float(heights[i] or 0),
+                        width=float(widths[i] or 0),
+                        part=float(parts[i] or 0),
+                        company_name=company_names[i],
+                        booklet_no=booklet_nos[i],
+                        page_no=page_nos[i],
+                        reference_image=reference_images[i] if i < len(reference_images) else None
+                    )
+
+        # Delete items that were removed from the form
+        if project_id:
+            project.quotation_items.exclude(id__in=processed_quotation_ids).delete()
+            project.job_card_items.exclude(id__in=processed_job_card_ids).delete()
+
         # ================= ADD-ONS =================
 
+        addon_item_ids = request.POST.getlist('addon_item_id[]')
         addon_descriptions = request.POST.getlist('addon_description[]')
         addon_rfts = request.POST.getlist('addon_rft_sqft[]')
         addon_rates = request.POST.getlist('addon_rate[]')
         addon_remarks = request.POST.getlist('addon_remarks[]')
+        
+        processed_addon_ids = []
 
         for i in range(len(addon_descriptions)):
             if addon_descriptions[i] and addon_rfts[i] and addon_rates[i]:
-                AddonItem.objects.create(
-                    project=project,
-                    description=addon_descriptions[i],
-                    rft_sqft=float(addon_rfts[i] or 0),
-                    rate=float(addon_rates[i] or 0),
-                    remarks=addon_remarks[i]
-                )
+                addon_item_id = addon_item_ids[i] if i < len(addon_item_ids) else None
+                if addon_item_id:
+                    addon_item = AddonItem.objects.get(id=addon_item_id, project=project)
+                    addon_item.description = addon_descriptions[i]
+                    addon_item.rft_sqft = float(addon_rfts[i] or 0)
+                    addon_item.rate = float(addon_rates[i] or 0)
+                    addon_item.remarks = addon_remarks[i]
+                    addon_item.save()
+                    processed_addon_ids.append(addon_item.id)
+                else:
+                    AddonItem.objects.create(
+                        project=project,
+                        description=addon_descriptions[i],
+                        rft_sqft=float(addon_rfts[i] or 0),
+                        rate=float(addon_rates[i] or 0),
+                        remarks=addon_remarks[i]
+                    )
+
+        if project_id:
+            project.addon_items.exclude(id__in=processed_addon_ids).delete()
 
         return redirect('generator:project_detail', project_id=project.id)
 
-    # Prepare context for template
     context = {
         'project': project
     }
     if project:
         context['date'] = project.date
-        # Pre-zip the items for easier iteration in the template
         quotation_items = project.quotation_items.all()
         job_card_items = project.job_card_items.all()
         
-        # Ensure we have a matching item for each, even if empty
         num_items = max(len(quotation_items), len(job_card_items))
         
         context['combined_items'] = list(zip(list(quotation_items) + [None]*num_items, list(job_card_items) + [None]*num_items))[:num_items]
@@ -134,7 +176,6 @@ def project_list_view(request):
 def delete_project_view(request, project_id):
     project = get_object_or_404(Project, id=project_id)
     project.delete()
-    # Optionally, add a success message here using Django's messaging framework
     return redirect('generator:project_list')
 
 

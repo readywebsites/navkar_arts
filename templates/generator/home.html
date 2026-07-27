@@ -23,6 +23,20 @@
         .table-responsive {
             max-height: 500px;
         }
+        .quantity-control {
+            display: flex;
+            align-items: center;
+        }
+        .quantity-control button {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+        }
+        .quantity-control input {
+            text-align: center;
+            width: 50px;
+            margin: 0 5px;
+        }
     </style>
 </head>
 <body>
@@ -91,7 +105,7 @@
                                 <th style="min-width: 80px;">Fold</th>
                                 <th style="min-width: 80px;">Meter</th>
                                 <th style="min-width: 80px;">Part</th>
-                                <th style="min-width: 80px;">Qty</th>
+                                <th style="min-width: 120px;">Qty</th>
                                 <th style="min-width: 100px;">Rate</th>
                                 <th style="min-width: 100px;">Discount (%)</th>
                                 <th style="min-width: 100px;">Final Amount</th>
@@ -200,51 +214,72 @@ document.addEventListener('DOMContentLoaded', function () {
     const addonsSubtotalEl = document.getElementById('addons-subtotal');
     const grandTotalEl = document.getElementById('grand-total');
 
-   function addItemRow() {
+   function addItemRow(quotationItem = {}, jobCardItem = {}) {
     const index = itemTableBody.children.length;
 
     const row = document.createElement('tr');
     row.innerHTML = `
-        <td><input type="text" class="form-control form-control-sm" name="quotation_description[]"></td>
-        <td><input type="number" class="form-control form-control-sm height" name="height[]" value="0"></td>
-        <td><input type="number" class="form-control form-control-sm width" name="width[]" value="0"></td>
+        <input type="hidden" name="quotation_item_id[]" value="${quotationItem.id || ''}">
+        <input type="hidden" name="job_card_item_id[]" value="${jobCardItem.id || ''}">
+        <td><input type="text" class="form-control form-control-sm" name="quotation_description[]" value="${quotationItem.description || ''}"></td>
+        <td><input type="number" class="form-control form-control-sm height" name="height[]" value="${jobCardItem.height || 0}" step="0.25"></td>
+        <td><input type="number" class="form-control form-control-sm width" name="width[]" value="${jobCardItem.width || 0}" step="0.25"></td>
         <td><input type="number" class="form-control form-control-sm fold" value="12"></td>
         <td><input type="number" class="form-control form-control-sm meter" readonly></td>
-        <td><input type="number" class="form-control form-control-sm part" name="part[]"></td>
-        <td><input type="number" class="form-control form-control-sm qty" name="quotation_qty[]" readonly></td>
-        <td><input type="number" class="form-control form-control-sm rate" name="quotation_rate[]" value="0"></td>
-        <td><input type="number" class="form-control form-control-sm discount" name="quotation_discount_percent[]" value="0"></td>
+        <td><input type="number" class="form-control form-control-sm part" name="part[]" value="${jobCardItem.part || 0}"></td>
+        <td>
+            <div class="quantity-control">
+                <button type="button" class="btn btn-secondary btn-sm qty-down">-</button>
+                <input type="number" class="form-control form-control-sm qty" name="quotation_qty[]" value="${quotationItem.quantity || 0}" readonly>
+                <button type="button" class="btn btn-secondary btn-sm qty-up">+</button>
+            </div>
+        </td>
+        <td><input type="number" class="form-control form-control-sm rate" name="quotation_rate[]" value="${quotationItem.rate || 0}"></td>
+        <td><input type="number" class="form-control form-control-sm discount" name="quotation_discount_percent[]" value="${quotationItem.discount_percent || 0}"></td>
         <td class="final-amount text-end">0.00</td>
 
-        <td><input type="text" class="form-control form-control-sm" name="company_name_${index}"></td>
-        <td><input type="text" class="form-control form-control-sm" name="booklet_no_${index}"></td>
-        <td><input type="text" class="form-control form-control-sm" name="page_no_${index}"></td>
+        <td><input type="text" class="form-control form-control-sm" name="company_name[]" value="${jobCardItem.company_name || ''}"></td>
+        <td><input type="text" class="form-control form-control-sm" name="booklet_no[]" value="${jobCardItem.booklet_no || ''}"></td>
+        <td><input type="text" class="form-control form-control-sm" name="page_no[]" value="${jobCardItem.page_no || ''}"></td>
 
-        <td><input type="file" name="reference_image_${index}" class="form-control form-control-sm"></td>
+        <td><input type="file" name="reference_image[]" class="form-control form-control-sm"></td>
         <td><button type="button" class="btn btn-danger btn-sm delete-row">Delete</button></td>
     `;
     itemTableBody.appendChild(row);
 }
 
-    function addAddonRow() {
+    function addAddonRow(addon = {}) {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td><input type="text" class="form-control form-control-sm" name="addon_description[]"></td>
-            <td><input type="number" class="form-control form-control-sm addon-rft" value="0"></td>
-            <td><input type="number" class="form-control form-control-sm addon-rate" name="addon_rate[]" value="0"></td>
+            <input type="hidden" name="addon_item_id[]" value="${addon.id || ''}">
+            <td><input type="text" class="form-control form-control-sm" name="addon_description[]" value="${addon.description || ''}"></td>
+            <td><input type="number" class="form-control form-control-sm addon-rft" value="${addon.rft_sqft || 0}" step="0.25"></td>
+            <td><input type="number" class="form-control form-control-sm addon-rate" name="addon_rate[]" value="${addon.rate || 0}"></td>
             <td class="addon-amount text-end">0.00</td>
-            <td><input type="text" class="form-control form-control-sm" name="addon_remarks[]"></td>
+            <td><input type="text" class="form-control form-control-sm" name="addon_remarks[]" value="${addon.remarks || ''}"></td>
             <td><button type="button" class="btn btn-danger btn-sm delete-row">Delete</button></td>
-            <input type="hidden" name="addon_rft_sqft[]" class="addon-rft-hidden">
+            <input type="hidden" name="addon_rft_sqft[]" class="addon-rft-hidden" value="${addon.rft_sqft || 0}">
         `;
         addonTableBody.appendChild(row);
     }
 
-    function updateTotals(recalculatePart = false) {
+    function roundToNearest(value, nearest) {
+        return Math.round(value / nearest) * nearest;
+    }
+
+    function updateTotals(recalculatePart = false, targetRow = null) {
         let itemsTotal = 0;
-        itemTableBody.querySelectorAll('tr').forEach(row => { 
-            const height = parseFloat(row.querySelector('.height').value) || 0;
-            const width = parseFloat(row.querySelector('.width').value) || 0;
+        const rowsToUpdate = targetRow ? [targetRow] : itemTableBody.querySelectorAll('tr');
+
+        rowsToUpdate.forEach(row => { 
+            const heightInput = row.querySelector('.height');
+            const widthInput = row.querySelector('.width');
+            
+            const height = roundToNearest(parseFloat(heightInput.value) || 0, 0.25);
+            const width = roundToNearest(parseFloat(widthInput.value) || 0, 0.25);
+            heightInput.value = height;
+            widthInput.value = width;
+
             const fold = parseFloat(row.querySelector('.fold').value) || 0;
             
             let part;
@@ -255,25 +290,38 @@ document.addEventListener('DOMContentLoaded', function () {
             part = parseFloat(row.querySelector('.part').value) || 0;
             
             const meter = (height + fold) / 39;
-            const qty = part * meter;
+            const rawQty = part * meter;
+            const roundedQty = Math.ceil(rawQty);
 
             row.querySelector('.meter').value = meter.toFixed(2);
-            row.querySelector('.qty').value = qty.toFixed(2);
+            const qtyInput = row.querySelector('.qty');
+            if (!qtyInput.dataset.manual) {
+                qtyInput.value = roundedQty;
+            }
+            
+            const finalQty = parseFloat(qtyInput.value) || 0;
 
             const rate = parseFloat(row.querySelector('.rate').value) || 0;
             const discount = parseFloat(row.querySelector('.discount').value) || 0;
 
-            const rowTotal = qty * rate;
+            const rowTotal = finalQty * rate;
             const discountAmount = rowTotal * (discount / 100);
             const finalAmount = rowTotal - discountAmount;
 
             row.querySelector('.final-amount').textContent = finalAmount.toFixed(2);
-            itemsTotal += finalAmount;
+        });
+
+        // Recalculate totals for all rows
+        itemTableBody.querySelectorAll('tr').forEach(row => {
+            itemsTotal += parseFloat(row.querySelector('.final-amount').textContent) || 0;
         });
 
         let addonsTotal = 0;
         addonTableBody.querySelectorAll('tr').forEach(row => {
-            const rft = parseFloat(row.querySelector('.addon-rft').value) || 0;
+            const rftInput = row.querySelector('.addon-rft');
+            const rft = roundToNearest(parseFloat(rftInput.value) || 0, 0.25);
+            rftInput.value = rft;
+
             const rate = parseFloat(row.querySelector('.addon-rate').value) || 0;
             const amount = rft * rate;
 
@@ -290,17 +338,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    addItemRowBtn.addEventListener('click', addItemRow);
-    addAddonRowBtn.addEventListener('click', addAddonRow);
+    addItemRowBtn.addEventListener('click', () => addItemRow());
+    addAddonRowBtn.addEventListener('click', () => addAddonRow());
 
     itemTableBody.addEventListener('input', function(e) {
         const target = e.target;
+        const row = target.closest('tr');
         if (target.classList.contains('width')) {
-            updateTotals(true); // Recalculate part
+            updateTotals(true, row);
         } else if (target.classList.contains('height') || target.classList.contains('fold') || 
                    target.classList.contains('part') || target.classList.contains('rate') || 
                    target.classList.contains('discount')) {
-            updateTotals(false); // Recalculate totals, but not the part
+            updateTotals(false, row);
         }
     });
 
@@ -312,9 +361,20 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     itemTableBody.addEventListener('click', function(e) {
-        if (e.target.classList.contains('delete-row')) {
-            e.target.closest('tr').remove();
+        const target = e.target;
+        if (target.classList.contains('delete-row')) {
+            target.closest('tr').remove();
             updateTotals();
+        } else if (target.classList.contains('qty-up')) {
+            const qtyInput = target.previousElementSibling;
+            qtyInput.value = parseInt(qtyInput.value) + 1;
+            qtyInput.dataset.manual = true;
+            updateTotals(false, target.closest('tr'));
+        } else if (target.classList.contains('qty-down')) {
+            const qtyInput = target.nextElementSibling;
+            qtyInput.value = Math.max(0, parseInt(qtyInput.value) - 1);
+            qtyInput.dataset.manual = true;
+            updateTotals(false, target.closest('tr'));
         }
     });
     addonTableBody.addEventListener('click', function(e) {
@@ -328,27 +388,31 @@ document.addEventListener('DOMContentLoaded', function () {
     {% if project %}
         // If editing, populate existing combined items
         {% for quotation_item, job_card_item in combined_items %}
-            addItemRow();
-            const lastItemRow = itemTableBody.lastElementChild;
-            lastItemRow.querySelector('[name="quotation_description[]"]').value = `{{ quotation_item.description|default:""|escapejs }}`;
-            lastItemRow.querySelector('[name="height[]"]').value = `{{ job_card_item.height|default:0 }}`;
-            lastItemRow.querySelector('[name="width[]"]').value = `{{ job_card_item.width|default:0 }}`;
-            lastItemRow.querySelector('[name="part[]"]').value = `{{ job_card_item.part|default:0 }}`;
-            lastItemRow.querySelector('[name="quotation_qty[]"]').value = `{{ quotation_item.quantity|default:0|floatformat:2 }}`;
-            lastItemRow.querySelector('[name="quotation_rate[]"]').value = `{{ quotation_item.rate|default:0 }}`;
-            lastItemRow.querySelector('[name="quotation_discount_percent[]"]').value = `{{ quotation_item.discount_percent|default:0 }}`;
-            lastItemRow.querySelector(`[name^="company_name_"]`).value = `{{ job_card_item.company_name|default:""|escapejs }}`;
-            lastItemRow.querySelector(`[name^="booklet_no_"]`).value = `{{ job_card_item.booklet_no|default:""|escapejs }}`;
-            lastItemRow.querySelector(`[name^="page_no_"]`).value = `{{ job_card_item.page_no|default:""|escapejs }}`;
+            addItemRow({
+                id: `{{ quotation_item.id|default:"" }}`,
+                description: `{{ quotation_item.description|default:""|escapejs }}`,
+                quantity: `{{ quotation_item.quantity|default:0|floatformat:2 }}`,
+                rate: `{{ quotation_item.rate|default:0 }}`,
+                discount_percent: `{{ quotation_item.discount_percent|default:0 }}`
+            }, {
+                id: `{{ job_card_item.id|default:"" }}`,
+                height: `{{ job_card_item.height|default:0 }}`,
+                width: `{{ job_card_item.width|default:0 }}`,
+                part: `{{ job_card_item.part|default:0 }}`,
+                company_name: `{{ job_card_item.company_name|default:""|escapejs }}`,
+                booklet_no: `{{ job_card_item.booklet_no|default:""|escapejs }}`,
+                page_no: `{{ job_card_item.page_no|default:""|escapejs }}`
+            });
         {% endfor %}
 
         {% for addon in project.addon_items.all %}
-            addAddonRow();
-            const lastAddonRow = addonTableBody.lastElementChild;
-            lastAddonRow.querySelector('[name="addon_description[]"]').value = `{{ addon.description|escapejs }}`;
-            lastAddonRow.querySelector('.addon-rft').value = `{{ addon.rft_sqft }}`;
-            lastAddonRow.querySelector('[name="addon_rate[]"]').value = `{{ addon.rate }}`;
-            lastAddonRow.querySelector('[name="addon_remarks[]"]').value = `{{ addon.remarks|escapejs }}`;
+            addAddonRow({
+                id: `{{ addon.id|default:"" }}`,
+                description: `{{ addon.description|escapejs }}`,
+                rft_sqft: `{{ addon.rft_sqft }}`,
+                rate: `{{ addon.rate }}`,
+                remarks: `{{ addon.remarks|escapejs }}`
+            });
         {% endfor %}
 
         if (itemTableBody.children.length === 0) {
