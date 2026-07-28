@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function () {
             
             const meter = (height + fold) / 39;
             const rawQty = part * meter;
-            const roundedQty = Math.ceil(rawQty);
+            const roundedQty = Math.ceil(rawQty * 2) / 2; // Round up to nearest 0.5
 
             row.querySelector('.meter').value = meter.toFixed(2);
             const qtyInput = row.querySelector('.qty');
@@ -367,12 +367,12 @@ document.addEventListener('DOMContentLoaded', function () {
             updateTotals();
         } else if (target.classList.contains('qty-up')) {
             const qtyInput = target.previousElementSibling;
-            qtyInput.value = parseInt(qtyInput.value) + 1;
+            qtyInput.value = parseFloat(qtyInput.value) + 0.5;
             qtyInput.dataset.manual = true;
             updateTotals(false, target.closest('tr'));
         } else if (target.classList.contains('qty-down')) {
             const qtyInput = target.nextElementSibling;
-            qtyInput.value = Math.max(0, parseInt(qtyInput.value) - 1);
+            qtyInput.value = Math.max(0, parseFloat(qtyInput.value) - 0.5);
             qtyInput.dataset.manual = true;
             updateTotals(false, target.closest('tr'));
         }
