@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+import math
 
 class Client(models.Model):
     name = models.CharField(max_length=100)
@@ -25,6 +26,10 @@ class QuotationItem(models.Model):
     rate = models.FloatField()
     discount_percent = models.FloatField(default=0)
 
+    def save(self, *args, **kwargs):
+        self.quantity = math.ceil(self.quantity * 2) / 2
+        super().save(*args, **kwargs)
+
     @property
     def total(self):
         return self.quantity * self.rate
@@ -49,6 +54,10 @@ class JobCardItem(models.Model):
     width = models.FloatField(default=0)
     part = models.FloatField(default=0)
     reference_image = models.ImageField(upload_to='job_card_images/', blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        self.height = math.ceil(self.height * 4) / 4
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.company_name} - Booklet {self.booklet_no}, Page {self.page_no}"
